@@ -1,0 +1,54 @@
+{
+  "form": "DS-160",
+  "form_title": "Online Nonimmigrant Visa Application (United States)",
+  "post": "Baku, Azerbaijan",
+  "notes": [
+    "Values are filled by scripts/fill_form.py from scans in input/.",
+    "Empty strings mean the field was not found — do not invent data.",
+    "Personal names, passport numbers and FIN are ICAO Latin (Doc 9303), uppercase.",
+    "Dates use DD/MM/YYYY."
+  ],
+  "answers": {
+    "personal_information": {
+      "surnames": {"ds160_id": "APP_SURNAME", "source": "last_name", "value": ""},
+      "given_names": {"ds160_id": "APP_GIVEN_NAMES", "source": "first_name", "value": ""},
+      "full_name_native_alphabet": {"ds160_id": "APP_FULL_NAME_NATIVE", "source": null, "value": ""},
+      "other_surnames_used": {"ds160_id": "APP_OTHER_SURNAMES", "source": null, "value": ""},
+      "other_given_names_used": {"ds160_id": "APP_OTHER_GIVEN_NAMES", "source": null, "value": ""},
+      "sex": {"ds160_id": "APP_GENDER", "source": null, "value": ""},
+      "marital_status": {"ds160_id": "APP_MARITAL_STATUS", "source": null, "value": ""},
+      "date_of_birth": {"ds160_id": "APP_DOB", "source": "date_of_birth", "value": ""},
+      "city_of_birth": {"ds160_id": "APP_POB_CITY", "source": null, "value": ""},
+      "country_of_birth": {"ds160_id": "APP_POB_COUNTRY", "source": null, "value": ""},
+      "nationality": {"ds160_id": "APP_NATIONALITY", "source": null, "value": ""}
+    },
+    "contact": {
+      "phone": {"ds160_id": "APP_PHONE", "source": "phone", "value": ""},
+      "secondary_phone": {"ds160_id": "APP_PHONE_SECONDARY", "source": null, "value": ""},
+      "email": {"ds160_id": "APP_EMAIL", "source": null, "value": ""},
+      "home_address_country": {"ds160_id": "APP_ADDR_COUNTRY", "source": null, "value": "AZERBAIJAN"},
+      "home_address_city": {"ds160_id": "APP_ADDR_CITY", "source": null, "value": "BAKU"}
+    },
+    "passport": {
+      "passport_type": {"ds160_id": "PPT_TYPE", "source": null, "value": "REGULAR"},
+      "passport_number": {"ds160_id": "PPT_NUM", "source": "passport_no", "value": ""},
+      "passport_book_number": {"ds160_id": "PPT_BOOK_NUM", "source": null, "value": ""},
+      "issuing_country": {"ds160_id": "PPT_ISSUING_COUNTRY", "source": null, "value": "AZERBAIJAN"},
+      "expiration_date": {"ds160_id": "PPT_EXPIRY", "source": "expiry_date", "value": ""},
+      "national_id_fin": {"ds160_id": "APP_NATIONAL_ID", "source": "fin_code", "value": ""}
+    },
+    "travel": {
+      "purpose_of_trip": {"ds160_id": "TRAVEL_PURPOSE", "source": null, "value": ""},
+      "intended_date_of_arrival": {"ds160_id": "TRAVEL_ARRIVAL", "source": null, "value": ""},
+      "intended_length_of_stay": {"ds160_id": "TRAVEL_LOS", "source": null, "value": ""},
+      "address_in_the_us": {"ds160_id": "TRAVEL_US_ADDRESS", "source": null, "value": ""}
+    },
+    "work_education": {
+      "primary_occupation": {"ds160_id": "WORK_OCCUPATION", "source": "job_title", "value": ""},
+      "employer_name": {"ds160_id": "WORK_EMPLOYER", "source": "employer_name", "value": ""},
+      "monthly_income": {"ds160_id": "WORK_INCOME", "source": "monthly_income", "value": ""},
+      "employer_address": {"ds160_id": "WORK_EMPLOYER_ADDR", "source": null, "value": ""},
+      "employer_phone": {"ds160_id": "WORK_EMPLOYER_PHONE", "source": null, "value": ""}
+    }
+  }
+}

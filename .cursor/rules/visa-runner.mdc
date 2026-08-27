@@ -1,0 +1,23 @@
+---
+description: Команда process-visa / заполни анкету — запуск scripts/fill_form.py и проверка output/
+alwaysApply: true
+---
+
+# process-visa / заполни анкету
+
+When the user says **process-visa**, **заполни анкету**, or an equivalent request to fill a visa form from files already in this repo:
+
+1. Confirm `input/` has JPG/PNG/PDF files and `templates/` has the Italy Schengen interactive PDF (`schengen_italy.pdf`). If `input/` is empty, stop and say what to add. If the PDF blank is missing, it may be rebuilt with `python scripts/create_schengen_template.py`.
+2. Run from the project root (default Italy / Schengen). For the United States, add `--target-country usa`:
+
+```bash
+python scripts/fill_form.py
+```
+
+3. Read the full command output. If the exit code is non-zero or the log contains `ERROR` / traceback, report the failure and do not claim success.
+4. List `output/` and confirm the expected deliverables exist and are non-empty:
+   - Italy (default): `output/filled_[LASTNAME]_schengen.pdf`, `output/cover_letter_[LASTNAME].pdf`, `output/document_checklist_[LASTNAME].txt`
+   - USA: `output/filled_[LASTNAME]_ds160.json`, plus the same cover letter and checklist names
+5. Give the user a short console-style report: each expected path as `[OK]` or `[MISSING]`, and the exact paths. Do not copy, log, or move applicant PII outside `output/`. Do not open or reprint passport numbers, FIN, phone, or dates.
+
+Do not re-implement filling in chat; always run `scripts/fill_form.py`.

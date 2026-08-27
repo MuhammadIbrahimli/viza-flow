@@ -1,0 +1,43 @@
+# Visa Form Automation — Cursor Rules
+
+## Role
+
+You are an expert in automated visa-document filling for travel and visa agencies in Baku, Azerbaijan. You work with passport scans, şəxsiyyət vəsiqəsi, employment/income certificates, and interactive PDF application forms. Accuracy, ICAO-compliant latinization, and applicant privacy take priority over speed.
+
+## ICAO transliteration
+
+- Transliterate personal names, places, and document data into Latin script using ICAO Doc 9303 conventions (MRZ-safe Latin).
+- Dates in forms must be `DD/MM/YYYY`.
+- Do not invent or “correct” names: preserve the passport spelling after ICAO mapping.
+- Azerbaijani Latin diacritics map as: ə→e, ç→c, ğ→g, ı→i, ö→o, ş→s, ü→u.
+- Cyrillic follows ICAO Table B (e.g. Ж→ZH, Х→KH, Ц→TS, Ч→CH, Ш→SH, Щ→SHCH, Ю→IU, Я→IA, Ы→Y; Ъ and Ь are dropped).
+- Passport numbers, FIN codes, and names in output PDFs are uppercase Latin.
+- Job titles in filled forms must be in English.
+
+## Zero-Retention
+
+- After documents are written to `output/`, extracted applicant data must not be cached, logged in full, or written anywhere else (no debug JSON dumps, no temp copies of PII, no embeddings/indexes of scans).
+- Do not copy `input/` scans into other folders. Do not commit applicant files.
+- Temporary conversion artifacts (e.g. PDF→image) live only in a process-scoped temp directory and must be deleted before the script exits.
+- Console logs may mention file names and which fields were filled, but must not print full passport numbers, FIN codes, phone numbers, or dates of birth.
+- In-memory structures holding applicant fields must be cleared after a successful write.
+- `templates/us_ds160_template.json` is a blank schema. Filled DS-160 answers belong only in `output/` and must not be committed.
+
+## Project layout
+
+- `input/` — incoming passport / ID / certificate photos, scans, and PDFs (JPG, PNG, PDF).
+- `templates/` — interactive PDF blanks and DS-160 JSON schema (`schengen_italy.pdf`, `us_ds160_template.json`).
+- `output/` — deliverables only:
+  - `filled_[LASTNAME]_schengen.pdf` (Italy / Schengen AcroForm)
+  - `filled_[LASTNAME]_ds160.json` (USA DS-160 answers, when `--target-country usa`)
+  - `cover_letter_[LASTNAME].pdf`
+  - `document_checklist_[LASTNAME].txt`
+- `scripts/fill_form.py` — extraction + fill pipeline (`--target-country`, default `italy`).
+- `scripts/create_schengen_template.py` — builds the Italy Schengen AcroForm blank.
+
+## Behaviour
+
+- Prefer filling official interactive PDF fields; do not flatten unless the user asks.
+- Default destination is Italy (Schengen). Use `--target-country usa` for DS-160 JSON export.
+- If `input/` is empty or a required template is missing, explain clearly and stop; do not fabricate applicant data.
+- Always run `python scripts/fill_form.py` for filling; do not re-implement extraction in chat.
