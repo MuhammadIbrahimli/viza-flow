@@ -4,3 +4,6 @@ pillow
 google-genai
 requests
 pymupdf
+fastapi
+uvicorn[standard]
+python-multipart

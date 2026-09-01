@@ -1,0 +1,8 @@
+.git
+.env
+input
+output
+**/__pycache__
+*.pyc
+.cursor
+node_modules

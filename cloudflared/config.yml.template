@@ -1,0 +1,19 @@
+# Named Cloudflare Tunnel template (optional).
+# Copy to config.yml and replace placeholders after:
+#   cloudflared tunnel create vizaflow
+#   cloudflared tunnel route dns vizaflow api.example.com
+#
+# Quick local tunnel (no config file) is started by start_all.bat / start_all.sh:
+#   cloudflared tunnel --url http://127.0.0.1:8000
+
+tunnel: <TUNNEL_ID>
+credentials-file: <PATH_TO_CREDENTIALS_JSON>
+
+ingress:
+  - hostname: <YOUR_HOSTNAME>
+    service: http://127.0.0.1:8000
+    originRequest:
+      noTLSVerify: true
+      connectTimeout: 30s
+      keepAliveTimeout: 90s
+  - service: http_status:404

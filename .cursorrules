@@ -18,7 +18,7 @@ You are an expert in automated visa-document filling for travel and visa agencie
 
 - After documents are written to `output/`, extracted applicant data must not be cached, logged in full, or written anywhere else (no debug JSON dumps, no temp copies of PII, no embeddings/indexes of scans).
 - Do not copy `input/` scans into other folders. Do not commit applicant files.
-- Temporary conversion artifacts (e.g. PDF→image) live only in a process-scoped temp directory and must be deleted before the script exits.
+- Temporary conversion artifacts (e.g. PDF→image) live only in a process-scoped temp directory under `temp/` and must be deleted before the script or request exits.
 - Console logs may mention file names and which fields were filled, but must not print full passport numbers, FIN codes, phone numbers, or dates of birth.
 - In-memory structures holding applicant fields must be cleared after a successful write.
 - `templates/us_ds160_template.json` is a blank schema. Filled DS-160 answers belong only in `output/` and must not be committed.
@@ -27,12 +27,15 @@ You are an expert in automated visa-document filling for travel and visa agencie
 
 - `input/` — incoming passport / ID / certificate photos, scans, and PDFs (JPG, PNG, PDF).
 - `templates/` — interactive PDF blanks and DS-160 JSON schema (`schengen_italy.pdf`, `us_ds160_template.json`).
-- `output/` — deliverables only:
+- `output/` — deliverables only (CLI pipeline):
   - `filled_[LASTNAME]_schengen.pdf` (Italy / Schengen AcroForm)
   - `filled_[LASTNAME]_ds160.json` (USA DS-160 answers, when `--target-country usa`)
   - `cover_letter_[LASTNAME].pdf`
   - `document_checklist_[LASTNAME].txt`
-- `scripts/fill_form.py` — extraction + fill pipeline (`--target-country`, default `italy`).
+- `app/main.py` — FastAPI service (`python run_server.py`, binds `127.0.0.1:8000`).
+- `app/services/` — Gemini extraction and PDF/TXT generation.
+- `temp/` — process-scoped conversion artifacts; deleted before the request finishes.
+- `scripts/fill_form.py` — CLI wrapper around `app.services.pipeline` (`--target-country`, default `italy`).
 - `scripts/create_schengen_template.py` — builds the Italy Schengen AcroForm blank.
 
 ## Behaviour
