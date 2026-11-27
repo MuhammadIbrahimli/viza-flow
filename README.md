@@ -1,102 +1,84 @@
-# Visa Generator · VizaFlow Backend
+# VizaFlow Backend
 
-Автозаполнение визовых документов для агентств в Баку: сканы → Gemini → анкета PDF, сопроводительное письмо PDF и чек-лист TXT.
+VizaFlow is a Python backend for preparing visa application documents. It accepts scanned source documents, extracts applicant information with Gemini, and generates completed PDF forms, a cover letter, and a document checklist. Italy/Schengen is the default target; the CLI also supports a USA form target.
 
-Имена транслитерируются по ICAO Doc 9303, даты — `DD/MM/YYYY`. Сканы через API не пишутся в `input/` / `output/`: только RAM и `temp/` (каталог процесса удаляется после ответа).
+Names are transliterated according to ICAO Doc 9303 and dates use `DD/MM/YYYY`. API uploads are processed in memory and temporary working files are removed after the request.
 
-## Сценарий 1 — Local Host + Cloudflare Tunnel
-
-Бекенд слушает только `127.0.0.1:8000`. Туннель Cloudflare публикует локальный API в интернет без открытия портов на роутере.
-
-### Что нужно
+## Requirements
 
 - Python 3.10+
-- Ключ Gemini: [Google AI Studio](https://aistudio.google.com/apikey)
-- [cloudflared](https://developers.cloudflare.com/cloudflare-one/connections/connect-networks/downloads/) в PATH
-- Для PDF-сканов — [Poppler](https://github.com/osber/poppler-windows/releases) (`pdf2image`)
+- A Gemini API key
+- `cloudflared` if you want to expose a local API through Cloudflare Tunnel
+- Poppler for processing PDF scans with `pdf2image`
+
+## Install
 
 ```bash
-python -m venv venv
-venv\Scripts\activate
+git clone https://github.com/MuhammadIbrahimli/viza-flow.git
+cd viza-flow
+python -m venv .venv
+```
+
+Activate the environment and install requirements:
+
+```bash
+# Windows
+.venv\Scripts\activate
+
+# macOS/Linux
+source .venv/bin/activate
+
 pip install -r requirements.txt
 ```
 
-Скопируйте `.env.example` в `.env` и укажите ключ:
+Copy `.env.example` to `.env` and configure at least:
 
-```
-GEMINI_API_KEY=ваш_ключ
+```dotenv
+GEMINI_API_KEY=your_gemini_api_key
 HOST=127.0.0.1
 PORT=8000
-CORS_ORIGINS=*
-TELEGRAM_BOT_TOKEN=your_bot_token_here
-TELEGRAM_CHAT_ID=your_chat_id_here
+CORS_ORIGINS=https://your-frontend.example
+TELEGRAM_BOT_TOKEN=your_bot_token
+TELEGRAM_CHAT_ID=your_chat_id
 ```
 
-### Запуск
+Set only the integrations you use. Keep secrets out of version control. Restrict `CORS_ORIGINS` to the frontend origins you trust.
 
-Одним скриптом (API + quick tunnel):
-
-```bat
-start_all.bat
-```
-
-Linux/macOS: `chmod +x start_all.sh && ./start_all.sh`
-
-В логе cloudflared появится URL вида `https://….trycloudflare.com`. Проверка:
-
-```
-GET /ping
-```
-
-Этот же адрес укажите во фронтенде (`visaflow-frontend` на Vercel):
-
-```
-NEXT_PUBLIC_API_BASE_URL=https://случайный-адрес.trycloudflare.com
-```
-
-Quick tunnel каждый раз выдаёт **новый** URL — после перезапуска cloudflared обновите переменную и сделайте Redeploy.
-
-Только API без туннеля:
+## Run the API
 
 ```bash
 python run_server.py
 ```
 
-Именованный туннель (свой домен): скопируйте `cloudflared/config.yml.template` → `cloudflared/config.yml` и подставьте Tunnel ID / hostname. Ingress уже указывает на `http://127.0.0.1:8000`.
+The API listens on `127.0.0.1:8000` by default. Check it with `GET /ping`.
 
-### API
+To run the API and a temporary Cloudflare quick tunnel together:
 
-| Метод | Путь | Ответ |
-|---|---|---|
-| GET | `/ping` | статус и uptime |
-| GET | `/api/health` | `{ "status": "ok" }` |
-| GET | `/api/defaults` | даты/отель по умолчанию |
-| POST | `/api/process` | JSON (base64: 2 PDF + 1 TXT). Form: `files`, `arrival_date`, `departure_date`, `hotel`, `notes`, `response_format=json\|zip` |
-| POST | `/api/pack` | ZIP с `filled_*_schengen.pdf`, `cover_letter_*.pdf`, `document_checklist_*.txt` |
-| POST | `/api/demo` | пакет-образец (без сканов) |
+```bash
+# Windows
+start_all.bat
 
-Тяжёлая генерация PDF идёт в thread pool и не блокирует event loop. CORS разрешён (см. `CORS_ORIGINS`).
-
-## Структура бекенда
-
-```
-app/
-  main.py              # FastAPI
-  config.py            # .env, пути, HOST/PORT
-  services/
-    gemini.py          # извлечение полей через Gemini
-    documents.py       # PDF/TXT и ZIP
-    pipeline.py        # ICAO, заполнение бланка
-    schengen_template.py
-    overlay.py
-temp/                  # временные артефакты (не коммитить)
-templates/             # бланк Шенгена и схема DS-160
-run_server.py          # uvicorn 127.0.0.1:8000
+# Linux/macOS
+chmod +x start_all.sh
+./start_all.sh
 ```
 
-UI живёт в отдельном проекте `visaflow-frontend` (Vercel). Этот репозиторий — только API.
+A quick tunnel URL changes when the tunnel restarts. Update the frontend's `NEXT_PUBLIC_API_BASE_URL` and rebuild or redeploy it after the URL changes. For a stable public endpoint, configure a named tunnel using the template in `cloudflared/`.
 
-## CLI (папка input/ → output/)
+## API
+
+| Method | Path | Purpose |
+| --- | --- | --- |
+| GET | `/ping` | Process status and uptime |
+| GET | `/api/health` | Health check |
+| GET | `/api/defaults` | Default trip and hotel values |
+| POST | `/api/process` | Process uploaded documents and return JSON or ZIP output |
+| POST | `/api/pack` | Package generated forms, letter, and checklist |
+| POST | `/api/demo` | Generate a sample package without uploaded scans |
+
+The process request accepts files plus trip dates, hotel, notes, and a response format. Check the API implementation before integrating against field details.
+
+## Command-line scripts
 
 ```bash
 python scripts/fill_form.py
@@ -104,10 +86,18 @@ python scripts/fill_form.py --arrival 10/09/2026 --departure 17/09/2026 --hotel 
 python scripts/create_schengen_template.py
 ```
 
-Италия / Шенген по умолчанию. США: `--target-country usa`.
+The default form is for Italy/Schengen. Use `--target-country usa` for the USA target.
 
-## Если ошибка
+## Repository boundary
 
-- Нет ключа — задайте `GEMINI_API_KEY` в `.env`.
-- 404 по модели — скрипт переберёт бесплатные Flash; при необходимости укажите `GEMINI_MODEL`.
-- `/ping` не отвечает — API не запущен или слушает другой порт.
+This repository contains the API and document-processing pipeline. The browser interface lives in the separate [VizaFlow Frontend](https://github.com/MuhammadIbrahimli/viza-flow-frontend) repository.
+
+## Troubleshooting
+
+- Missing model credentials: configure `GEMINI_API_KEY` in `.env`.
+- Model not found: the code tries compatible Flash models; set `GEMINI_MODEL` if needed.
+- `/ping` is unavailable: confirm that the API process is running on the configured host and port.
+
+## License
+
+See [LICENSE](LICENSE).
